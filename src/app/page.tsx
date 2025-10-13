@@ -9,7 +9,7 @@ import Login from "@/components/custom/landing/Login";
 export default function Landing() {
   return (
     <div className="p-4 w-dvw h-dvh block md:flex">
-      <div className="w-1/3 bg-primary rounded-2xl text-white flex flex-col justify-between">
+      <div className="w-1/3 bg-primary-blue rounded-2xl text-white flex flex-col justify-between">
         <div className="mt-16">
           <h1
             className="text-4xl font-bold text-center">
@@ -46,11 +46,11 @@ export default function Landing() {
           <TabsList className="bg-backdrop w-96 my-8">
             <TabsTrigger
               value="sign-up"
-              className="cursor-pointer data-[state=active]:bg-primary data-[state=active]:text-white"
+              className="cursor-pointer data-[state=active]:bg-primary-blue data-[state=active]:text-white"
             >Sign Up</TabsTrigger>
             <TabsTrigger
             value="sign-in"
-            className="cursor-pointer data-[state=active]:bg-primary data-[state=active]:text-white"
+            className="cursor-pointer data-[state=active]:bg-primary-blue data-[state=active]:text-white"
             >Sign In</TabsTrigger>
           </TabsList>
           <Registration />

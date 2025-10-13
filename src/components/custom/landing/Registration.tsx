@@ -35,7 +35,7 @@ export default function Registration() {
                   aria-invalid={fieldState.invalid}
                   placeholder="Enter Email Address"
                   autoComplete="off"
-                  className="border-primary"
+                  className="border-primary-blue"
                 />
                 {fieldState.invalid &&(
                   <FieldError errors={[fieldState.error]} />
@@ -55,7 +55,7 @@ export default function Registration() {
                   aria-invalid={fieldState.invalid}
                   placeholder="Enter First Name"
                   autoComplete="off"
-                  className="border-primary"
+                  className="border-primary-blue"
                 />
                 {fieldState.invalid &&(
                   <FieldError errors={[fieldState.error]} />
@@ -75,7 +75,7 @@ export default function Registration() {
                   aria-invalid={fieldState.invalid}
                   placeholder="Enter Last Name"
                   autoComplete="off"
-                  className="border-primary"
+                  className="border-primary-blue"
                 />
                 {fieldState.invalid &&(
                   <FieldError errors={[fieldState.error]} />
@@ -95,7 +95,7 @@ export default function Registration() {
                   aria-invalid={fieldState.invalid}
                   placeholder="Enter Password"
                   autoComplete="off"
-                  className="border-primary"
+                  className="border-primary-blue"
                   type="password"
                 />
                 {fieldState.invalid &&(
@@ -110,7 +110,7 @@ export default function Registration() {
         <Button
           type="submit"
           form="registration-form"
-          className="bg-primary text-white w-full cursor-pointer"
+          className="bg-primary-blue text-white w-full cursor-pointer"
         >Create Account</Button>
       </div>
       
