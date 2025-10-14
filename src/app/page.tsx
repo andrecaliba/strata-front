@@ -5,32 +5,27 @@ import Logo from "@/assets/STRATA_SQUARE LOGO 1.svg";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Registration from "@/components/custom/landing/Registration";
 import Login from "@/components/custom/landing/Login";
+import LANDING_BG from "@/assets/LANDING_BG.png";
 
 export default function Landing() {
   return (
-    <div className="p-4 w-dvw h-dvh block md:flex">
-      <div className="w-1/3 bg-primary-blue rounded-2xl text-white flex flex-col justify-between">
-        <div className="mt-16">
-          <h1
-            className="text-4xl font-bold text-center">
-              Welcome to STRATA
+    <div className="w-screen h-screen flex">
+      {/* Left Section */}
+      <div className="w-1/2 h-full relative overflow-hidden flex flex-col justify-between text-white p-16">
+        <Image src={LANDING_BG} alt="Landing Background" fill className="object-cover object-center" priority/>
+        <div className="absolute inset-0 bg-gradient-to-b from-[rgba(70,95,241,0.37)] to-[#465FF1] z-10"></div>
+        <div className="relative z-20 mt-20 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            Welcome to STRATA
           </h1>
-          <p
-            className="text-center"
-          >
+          <p className="text-base md:text-lg opacity-90">
             Your Gateway to Effortless Management.
           </p>
         </div>
-        
-        <div className="mb-16">
-          <h1
-            className="text-4xl font-bold text-center"
-          >
-            Organize Your World
-          </h1>
-          <p
-            className="text-center"
-          >
+
+        <div className="relative z-20 mb-20 text-center">
+          <h1 className="text-2xl font-semibold mb-2">Organize Your World</h1>
+          <p className="text-base md:text-lg opacity-90">
             Achieve greater team alignment through instant collaboration.
           </p>
         </div>
