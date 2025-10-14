@@ -124,4 +124,5 @@
     --color-primary-dark: #153b68;
     --color-backdrop: #edf1ff;
     --color-primary-gradient: linear-gradient(to bottom, #85abee, #698ded, #5372ea, #4966e9, #455eee);
+    --color-time-out: #f04d23;
 }
