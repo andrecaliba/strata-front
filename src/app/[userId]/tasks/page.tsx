@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -18,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Board from "@/components/custom/tasks/Board";
+import List from "@/components/custom/tasks/List";
 
 export default function Tasks() {
   return (
@@ -68,6 +71,7 @@ export default function Tasks() {
               <Button className="ml-2 bg-primary-blue text-white cursor-pointer">New Task</Button>
             </div>
           </div>
+          <List />
           <Board />
         </Tabs>
         
