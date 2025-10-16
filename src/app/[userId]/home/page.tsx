@@ -35,6 +35,7 @@ import QuotePic from "@/assets/quote-pic.png";
 import Image from "next/image";
 import { ChartContainer, ChartConfig } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import CodeCheck from "@/components/custom/modal/CodeCheck";
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -70,6 +71,7 @@ export default function Home() {
   } satisfies ChartConfig;
   return (
     <div className="p-4 w-full overflow-y-auto">
+      <CodeCheck isOpen={true}/>
       <Card>
         <CardContent className="flex">
           <Input type="search" className="w-80" placeholder="Search"/>
