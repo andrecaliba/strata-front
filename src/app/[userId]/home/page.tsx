@@ -71,7 +71,7 @@ export default function Home() {
   } satisfies ChartConfig;
   return (
     <div className="p-4 w-full overflow-y-auto">
-      <CodeCheck isOpen={true}/>
+      <CodeCheck isOpen={false}/>
       <Card>
         <CardContent className="flex">
           <Input type="search" className="w-80" placeholder="Search"/>

@@ -33,8 +33,12 @@ import {
   LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useParams } from "next/navigation";
 
 export default function AppSidebar() {
+  const params = useParams();
+  const userId = params.userId as string;
+  
   return (
     <Sidebar>
       <SidebarHeader className="text-primary-dark font-semibold bg-gray-100">STRATA</SidebarHeader>
@@ -45,7 +49,7 @@ export default function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href={"#"}>
+                  <a href={`/${userId}/home`}>
                     <House />
                     <span>Home</span>
                   </a>
@@ -53,7 +57,7 @@ export default function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href={"#"}>
+                  <a href={`/${userId}/calendar`}>
                     <Calendar />
                     <span>Calendar</span>
                   </a>
