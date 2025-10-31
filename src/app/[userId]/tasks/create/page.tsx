@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -8,8 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import TaskCreate from "@/components/custom/tasks/TaskCreate";
+import { useGetUser } from "@/hooks/use-user";
 
 export default function CreateTask() {
+  const { data: user, isLoading: isUserLoading, error: userError } = useGetUser();
+
   return (
     <div className="p-4">
       <Card className="mb-4">
@@ -19,8 +24,16 @@ export default function CreateTask() {
             <Bell className="w-6 h-6"/>
             <div className="ml-2 bg-blue-300 rounded-full w-8 h-8"></div>
             <div className="ml-2">
-              <p className="font-semibold text-xs">Justin Carlo Unggoy</p>
-              <p className="text-xs">Employee</p>
+              <p className="font-semibold text-xs">{isUserLoading 
+                  ? "Loading..." 
+                  : user 
+                    ? `${user.first_name} ${user.last_name}`.trim() 
+                    : "Unknown User"}</p>
+              <p className="text-xs">{isUserLoading 
+                  ? "Loading..." 
+                  : user 
+                    ? user.role
+                    : "Unspecified Role"}</p>
             </div>
           </div>
         </CardContent>

@@ -34,9 +34,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
+import { useSignOut } from "@/hooks/use-auth";
 
 export default function AppSidebar() {
   const params = useParams();
+  const { mutate: signOutMutation, isPending } = useSignOut();
+  
   const userId = params.userId as string;
   
   return (
@@ -82,14 +85,14 @@ export default function AppSidebar() {
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
                           <SidebarMenuButton asChild>
-                            <a href={"#"}>
+                            <a href={`/${userId}/tasks`}>
                               <span>My Tasks</span>
                             </a>
                           </SidebarMenuButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
                           <SidebarMenuButton asChild>
-                            <a href={"#"}>
+                            <a href={`/${userId}/tasks/create`}>
                               <span>Task Creation</span>
                             </a>
                           </SidebarMenuButton>
@@ -165,7 +168,7 @@ export default function AppSidebar() {
       <SidebarFooter>
         <Button className="bg-[#fafafa] border-gray-200 border-2 text-gray-500
         hover:text-gray-500 hover:bg-gray-100" asChild>
-          <a href={"#"}>
+          <a href={"#"} onClick={() => signOutMutation()}>
             <LogOut />
             <span>Logout</span>
           </a>

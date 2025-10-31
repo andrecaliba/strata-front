@@ -1,10 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { useState } from "react";
 import Image from "next/image";
-import { Input } from "@/components/ui/input";
-import { Bell, MoreHorizontal } from "lucide-react";
-import AppSidebar from "@/components/custom/sidebar/AppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import profileImg from "@/assets/profile.jpg";
 import { TabsContent } from "@/components/ui/tabs";
 import {
@@ -16,27 +11,11 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-
-interface Task {
-  id: number;
-  name: string;
-  difficulty: "Easy" | "Moderate" | "Hard";
-  status: "Completed" | "In progress";
-  dueDate: string;
-  progress: number;
-  originalProgress: number;
-  assignees: string[]; 
-}
-
-const initialTasks: Task[] = [
-  { id: 1, name: "STRATA UI/UX Design", difficulty: "Easy", status: "Completed", dueDate: "Due Today", progress: 80, originalProgress: 80, assignees: ["profile"] },
-  { id: 2, name: "FLUX Pitch Deck", difficulty: "Moderate", status: "In progress", dueDate: "Due Sept. 29", progress: 70, originalProgress: 70, assignees: ["profile"] },
-  { id: 3, name: "STRATA Development", difficulty: "Hard", status: "In progress", dueDate: "Due Sept. 30", progress: 4, originalProgress: 4, assignees: ["profile", "profile"] },
-];
+import { useGetTasks } from "@/hooks/use-task";
+import { Task } from "@/types/dataInterface";
 
 export default function TaskList() {
-
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const { data: tasks = [], isLoading } = useGetTasks();
 
   const getDifficultyColor = (difficulty: string) => ({
     Easy: "text-[#219653]",
@@ -62,19 +41,27 @@ export default function TaskList() {
   const getDueDateColor = (dueDate: string) =>
     dueDate === "Due Today" ? "text-[#EB5757]" : "text-[#BDBDBD]";
 
-  const toggleTaskComplete = (id: number) => {
-    setTasks(prev =>
-      prev.map(t => {
-        if (t.id !== id) return t;
-        const isCompleted = t.status === "Completed";
-        return isCompleted
-          ? { ...t, status: "In progress", progress: t.originalProgress }
-          : { ...t, status: "Completed", originalProgress: t.progress, progress: 100 };
-      })
-    );
+  const toggleTaskComplete = (id: string) => {
+    // setTasks(prev =>
+    //   prev.map((t: Task) => {
+    //     if (t.id !== id) return t;
+    //     const isCompleted = t.status === "Completed";
+    //     return isCompleted
+    //       ? { ...t, status: "In progress", progress: t.originalProgress }
+    //       : { ...t, status: "Completed", originalProgress: t.progress, progress: 100 };
+    //   })
+    // );
   };
 
-  console.log(`bg-['${getProgressColor("Easy")}']`);
+  if (isLoading) {
+    return (
+      <TabsContent value="list">
+        <Card className="bg-white border w-full border-[#D9D9D9] rounded-lg p-8">
+          <p className="text-center text-gray-500">Loading tasks...</p>
+        </Card>
+      </TabsContent>
+    );
+  }
 
   return (
     <TabsContent value="list">
@@ -93,13 +80,13 @@ export default function TaskList() {
             </TableRow>
           </TableHeader>
           <TableBody className="px-6 py-6 space-y-12">
-            {tasks.map(task => (
-              <TableRow key={task.id} className="relative">
+            {tasks.map((task: Task) => (
+              <TableRow key={task.task_id} className="relative">
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <button
                       aria-label={task.status === "Completed" ? "Mark as in progress" : "Mark as completed"}
-                      onClick={() => toggleTaskComplete(task.id)}
+                      onClick={() => toggleTaskComplete(task.task_id)}
                       className="cursor-pointer flex items-center justify-center"
                     >
                       {task.status === "Completed" ? (
@@ -114,7 +101,7 @@ export default function TaskList() {
                       )}
                     </button>
                     <div>
-                      <span className="text-[13px] font-semibold text-[#4F4F4F]">{task.name}</span>
+                      <span className="text-[13px] font-semibold text-[#4F4F4F]">{task.title}</span>
                       <div className="flex items-center gap-3">
                         <Progress
                           className={`w-[320px] h-1 ${getBackgroundColor(task.difficulty)}`}
@@ -132,7 +119,7 @@ export default function TaskList() {
                   </div>
                 </TableCell>
                 <TableCell className={`text-[11px] ${getStatusColor(task.status)}`}>{task.status}</TableCell>
-                <TableCell className={`text-[11px] ${getDueDateColor(task.dueDate)}`}>{task.dueDate}</TableCell>
+                <TableCell className={`text-[11px] ${getDueDateColor(task.due_date)}`}>{task.due_date}</TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-0">
                     {task.assignees.map((_, index) => (

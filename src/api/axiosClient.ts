@@ -35,23 +35,16 @@ axiosClient.interceptors.request.use(
 // Response Interceptor - Error Handling
 axiosClient.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse => response,
-  async (error: AxiosError): Promise<any> => {
+  async (error: AxiosError): Promise<AxiosError> => {
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("authToken");
-        window.location.href = "/";
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
+        }
       }
     }
-    
-    // Extract serializable error data to avoid cloning issues
-    const errorData = error.response?.data as AxiosError;
-    const serializableError = {
-      message: errorData?.message || error.message || 'An error occurred',
-      status: error.response?.status,
-      data: errorData,
-    };
-    
-    return Promise.reject(serializableError);
+    return Promise.reject(error);
   }
 );
 

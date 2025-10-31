@@ -21,8 +21,19 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Board from "@/components/custom/tasks/Board";
 import List from "@/components/custom/tasks/List";
+import { useGetUser } from "@/hooks/use-user";
 
 export default function Tasks() {
+  const { data: user, isLoading: isUserLoading, error: userError } = useGetUser();
+
+  if (isUserLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (userError) {
+    return <div>Error loading user data.</div>;
+  }
+  
   return (
     <div className="p-4 w-full">
       <Card>
@@ -68,7 +79,10 @@ export default function Tasks() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <Button className="ml-2 bg-primary-blue text-white cursor-pointer">New Task</Button>
+              { /* Go to */}
+              <Button className="ml-2 bg-primary-blue text-white cursor-pointer" onClick={() => {
+                window.location.href = `/${user?.user_id}/tasks/create`;
+              }}>New Task</Button>
             </div>
           </div>
           <List />

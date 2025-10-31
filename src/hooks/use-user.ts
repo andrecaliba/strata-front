@@ -1,13 +1,16 @@
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { userService } from '../api/services/userService';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { AxiosError } from 'axios';
+import { User } from '@/types/dataInterface';
 
 export const useGetUser = () => {
-  return useQuery({
-    queryKey: ['getUser'],
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+  return useQuery<User>({
+    queryKey: ['currentUser'],
     queryFn: userService.getUser,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 1,
+    enabled: !!token,
+    
   })
 }
-

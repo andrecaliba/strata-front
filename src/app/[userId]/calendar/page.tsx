@@ -7,7 +7,7 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Bell, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useCalendar } from "@/hooks/use-calendar";
+import { useCalendarConnect, useCalendarSyncTasks } from "@/hooks/use-calendar";
 
 const localizer = momentLocalizer(moment);
 
@@ -92,15 +92,14 @@ const eventStyleGetter = (event: CalendarEvent) => {
 };
 
 export default function MyCalendar() {
-  const { connectGoogle, syncAllTasks, isConnecting, isSyncingAll } =
-    useCalendar();
-
+  const { mutate: calendarConnectMutation, isPending: isConnecting } = useCalendarConnect();
+  const { mutate: calendarSyncTasksMutation, isPending: isSyncingAll } = useCalendarSyncTasks();
   const handleConnectGoogle = () => {
-    connectGoogle();
+    calendarConnectMutation();
   };
 
   const handleSyncAllTasks = () => {
-    syncAllTasks();
+    calendarSyncTasksMutation();
   };
 
   return (
@@ -163,8 +162,4 @@ export default function MyCalendar() {
       </div>
     </div>
   );
-}
-
-function syncAllTasks() {
-  throw new Error("Function not implemented.");
 }
