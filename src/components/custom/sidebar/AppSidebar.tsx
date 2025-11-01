@@ -104,7 +104,7 @@ export default function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href={"#"}>
+                  <a href={`/${userId}/people`}>
                     <UserRound />
                     <span>People</span>
                   </a>

@@ -92,3 +92,10 @@ export const useSyncTime = () => {
     retry: 1,
   });
 };
+
+export const useGetAttendances = (date?: string, searchInput?: string) => {
+  return useQuery({
+    queryKey: ["attendances", date, searchInput],
+    queryFn: () => workService.getAllAttendances(date, searchInput),
+  });
+};

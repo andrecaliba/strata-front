@@ -42,6 +42,13 @@ export const workService = {
   syncTime: async () => {
     const response = await axiosClient.get('/work/sync-time');
     return response.data;
+  },
+
+  getAllAttendances: async (date?: string, searchInput?: string) => {
+    const response = await axiosClient.get('/work/get-attendances', {
+      params: { date, searchInput }
+    });
+    return response.data;
   }
 };
 

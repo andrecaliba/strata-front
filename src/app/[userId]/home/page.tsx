@@ -40,9 +40,13 @@ import {
 } from "@/hooks/use-work";
 import { useGenerateVerification } from "@/hooks/use-code";
 import { useGetUser } from "@/hooks/use-user";
+import { useGetTasks } from "@/hooks/use-task";
+import { Task } from "@/types/dataInterface";
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { data: user, isLoading: isUserLoading } = useGetUser();
+  const { data: tasks = [], isLoading: isTasksLoading } = useGetTasks();
+
   const generateVerificationMutation = useGenerateVerification();
   const [localWorkTime, setLocalWorkTime] = useState(0);
   const [localBreakTime, setLocalBreakTime] = useState(0);
@@ -136,6 +140,12 @@ export default function Home() {
     workData?.attendance?.remaining_break,
     workData?.attendance?.last_sync_at,
   ]);
+  const getDifficultyColor = (difficulty: string) =>
+    ({
+      Easy: "text-[#219653]",
+      Moderate: "text-[#F2994A]",
+      Hard: "text-[#EB5757]",
+    }[difficulty] || "text-[#828282]");
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -365,110 +375,39 @@ export default function Home() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2 pr-4">
-                          <Checkbox />
-                          <div>
-                            <p className="font-bold">STRATA UI/UX Design</p>
-                            <div className="flex items-center">
-                              <Progress value={33} />
-                              <p className="ml-2">33%</p>
+                    {tasks.map((task: Task) => (
+                      <TableRow key={task.task_id}>
+                        <TableCell className="flex items-center gap-2 pr-4">
+                          <div className="flex items-center gap-2 pr-4">
+                            <Checkbox />
+                            <div>
+                              <p className="font-bold">{task.title}</p>
+                              <div className="flex items-center">
+                                <Progress value={task.progress} />
+                                <p className="ml-2">{task.progress}%</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="flex items-center text-green-600">
-                            <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
-                            Easy
-                          </div>
-                          <p className="text-gray-400">Completed</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2 pr-4">
-                          <Checkbox />
+                        </TableCell>
+                        <TableCell>
                           <div>
-                            <p className="font-bold">STRATA UI/UX Design</p>
-                            <div className="flex items-center">
-                              <Progress value={33} />
-                              <p className="ml-2">33%</p>
+                            <div className={`flex items-center ${getDifficultyColor(task.difficulty)}`}>
+                              {task.difficulty}
                             </div>
+                            <p className="text-gray-400">{task.status}</p>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="flex items-center text-green-600">
-                            <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
-                            Easy
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center -space-x-2">
+                            {task.assignees.map((assignee) => (
+                              <div key={assignee.user_id} className="w-8 h-8 bg-gray-400 rounded-full text-center text-xs text-white align-middle flex items-center justify-center">
+                                  <p> {assignee.first_name.charAt(0)}</p>
+                              </div>
+                            ))}
                           </div>
-                          <p className="text-gray-400">Completed</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2 pr-4">
-                          <Checkbox />
-                          <div>
-                            <p className="font-bold">STRATA UI/UX Design</p>
-                            <div className="flex items-center">
-                              <Progress value={33} />
-                              <p className="ml-2">33%</p>
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="flex items-center text-green-600">
-                            <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
-                            Easy
-                          </div>
-                          <p className="text-gray-400">Completed</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <div className="flex items-center gap-2 pr-4">
-                          <Checkbox />
-                          <div>
-                            <p className="font-bold">STRATA UI/UX Design</p>
-                            <div className="flex items-center">
-                              <Progress value={33} />
-                              <p className="ml-2">33%</p>
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="flex items-center text-orange-600">
-                            <div className="w-2 h-2 bg-orange-600 rounded-full mr-2"></div>
-                            Moderate
-                          </div>
-                          <p className="text-gray-400">In Progress</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="w-6 h-6 bg-gray-600 rounded-full"></div>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </CardContent>

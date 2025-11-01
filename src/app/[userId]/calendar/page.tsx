@@ -8,59 +8,25 @@ import { Input } from "@/components/ui/input";
 import { Bell, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCalendarConnect, useCalendarSyncTasks } from "@/hooks/use-calendar";
-
+import { useGetUser } from "@/hooks/use-user";
+import { useGetTasks } from "@/hooks/use-task";
+import { Task } from "@/types/dataInterface";
+import { useMemo } from "react";
 const localizer = momentLocalizer(moment);
 
 type CalendarEvent = {
   title: string;
   start: Date;
   end: Date;
+  description: string;
   allDay: boolean;
-  status: "easy" | "medium" | "hard";
+  status: "Easy" | "Moderate" | "Hard";
 };
-
-const myEventsList: CalendarEvent[] = [
-  {
-    title: "WPH Content Stage1",
-    start: new Date(2025, 8, 2),
-    end: new Date(2025, 8, 2),
-    allDay: true,
-    status: "hard",
-  },
-  {
-    title: "Team Standup",
-    start: new Date(2025, 8, 7),
-    end: new Date(2025, 8, 7),
-    allDay: true,
-    status: "easy",
-  },
-  {
-    title: "UI Design Review",
-    start: new Date(2025, 8, 12),
-    end: new Date(2025, 8, 12),
-    allDay: true,
-    status: "medium",
-  },
-  {
-    title: "FLUX Meeting Update",
-    start: new Date(2025, 8, 19),
-    end: new Date(2025, 8, 19),
-    allDay: true,
-    status: "easy",
-  },
-  {
-    title: "STRATA Flowchart",
-    start: new Date(2025, 8, 19),
-    end: new Date(2025, 8, 19),
-    allDay: true,
-    status: "medium",
-  },
-];
 
 const eventStyleGetter = (event: CalendarEvent) => {
   let style: React.CSSProperties = {};
   switch (event.status) {
-    case "hard":
+    case "Hard":
       style = {
         backgroundColor: "#f9988f",
         color: "black",
@@ -69,7 +35,7 @@ const eventStyleGetter = (event: CalendarEvent) => {
         fontSize: "0.75rem",
       };
       break;
-    case "medium":
+    case "Moderate":
       style = {
         backgroundColor: "#fff085",
         color: "black",
@@ -78,7 +44,7 @@ const eventStyleGetter = (event: CalendarEvent) => {
         fontSize: "0.75rem",
       };
       break;
-    case "easy":
+    case "Easy":
       style = {
         backgroundColor: "#7bf1a8",
         color: "black",
@@ -92,15 +58,32 @@ const eventStyleGetter = (event: CalendarEvent) => {
 };
 
 export default function MyCalendar() {
-  const { mutate: calendarConnectMutation, isPending: isConnecting } = useCalendarConnect();
-  const { mutate: calendarSyncTasksMutation, isPending: isSyncingAll } = useCalendarSyncTasks();
+  const { data: user, isLoading: isUserLoading } = useGetUser();
+  const { data: tasks = [], isLoading: isTasksLoading } = useGetTasks();
+  const { mutate: calendarConnectMutation, isPending: isConnecting } =
+    useCalendarConnect();
+  const { mutate: calendarSyncTasksMutation, isPending: isSyncingAll } =
+    useCalendarSyncTasks();
+
+  const tasksToEvent = useMemo(() => {
+    // Map Tasks to Calendar Events
+    return tasks.map((task: Task) => ({
+      title: task.title,
+      description: task.description,
+      start: new Date(task.due_date),
+      end: new Date(task.due_date),
+      allDay: true,
+      status: task.status,
+    }));
+  }, [tasks]);
+
   const handleConnectGoogle = () => {
     calendarConnectMutation();
   };
-
   const handleSyncAllTasks = () => {
     calendarSyncTasksMutation();
   };
+  
 
   return (
     <div className="p-4">
@@ -111,8 +94,20 @@ export default function MyCalendar() {
             <Bell className="w-6 h-6" />
             <div className="ml-2 bg-blue-300 rounded-full w-8 h-8"></div>
             <div className="ml-2">
-              <p className="font-semibold text-xs">Justin Carlo Unggoy</p>
-              <p className="text-xs">Employee</p>
+              <p className="font-semibold text-xs">
+                {isUserLoading
+                  ? "Loading..."
+                  : user
+                  ? `${user.first_name} ${user.last_name}`.trim()
+                  : "Unknown User"}
+              </p>
+              <p className="text-xs">
+                {isUserLoading
+                  ? "Loading..."
+                  : user
+                  ? user.role
+                  : "Unknown Role"}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -121,7 +116,7 @@ export default function MyCalendar() {
         <div className="flex-1 mr-4">
           <Calendar
             localizer={localizer}
-            events={myEventsList}
+            events={tasksToEvent}
             startAccessor="start"
             endAccessor="end"
             style={{ height: 500 }}
