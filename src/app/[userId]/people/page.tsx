@@ -187,7 +187,6 @@ export default function People() {
   const formatDateTime = (dateTimeString: string | undefined) => {
     if (!dateTimeString) return "";
     const date = new Date(dateTimeString);
-    // Format in "MM/DD/YYYY Hour:Minute AM/PM" format
     return format(date, "MM/dd/yyyy hh:mm a");
   };
 
