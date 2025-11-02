@@ -23,6 +23,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 
 export default function CodeCheck({
@@ -33,7 +34,7 @@ export default function CodeCheck({
   const { data: user, isLoading: isUserLoading } = useGetUser();
   const { data: verificationData } = useGetActiveVerification();
   const validateMutation = useValidateCode();
-  const snoozeMutation = useSnoozeVerification();
+  const { mutate: snoozeMutation, isPending } = useSnoozeVerification();
   const verification = verificationData?.verification;
   const isOpen = !!verification || externalOpen;
 
@@ -82,9 +83,13 @@ export default function CodeCheck({
   });
 
   const handleSnooze = async () => {
-    if (verification) {
-      await snoozeMutation.mutateAsync(verification.verification_id);
+    if (!verification) {
+      console.error("No verification available to snooze");
+      toast.error("No verification available to snooze");
+      return;
     }
+    console.log("Snoozing verification ID:", verification.verification_id);
+    snoozeMutation({ verificationId: verification.verification_id });
   };
 
   const formatTime = (seconds: number) => {
@@ -102,7 +107,6 @@ export default function CodeCheck({
     });
   };
 
-  // Calculate the displayed time based on snoozes
   const getDisplayTime = () => {
     if (!verification) return "N/A";
 
@@ -228,11 +232,11 @@ export default function CodeCheck({
                   <Button
                     type="button"
                     onClick={handleSnooze}
-                    disabled={snoozeMutation.isPending}
+                    disabled={isPending}
                     variant="outline"
                     className="flex-1"
                   >
-                    {snoozeMutation.isPending
+                    {isPending
                       ? "Snoozing..."
                       : `Snooze (${verification.snooze_count}/3)`}
                   </Button>

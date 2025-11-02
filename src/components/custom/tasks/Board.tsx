@@ -1,12 +1,12 @@
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Ellipsis } from "lucide-react";
 import { TabsContent } from "@/components/ui/tabs";
-import { useGetTasks } from "@/hooks/use-task";
+import { useGetAllTasks } from "@/hooks/use-task";
 import { useMemo } from "react";
 import { Task } from "@/types/dataInterface";
 
 export default function BoardTasks() {
-  const { data: tasks = [], isLoading } = useGetTasks();
+  const { data: tasks = [], isLoading } = useGetAllTasks();
 
   const tasksByStatus = useMemo(() => {
     return {

@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import Board from "@/components/custom/tasks/Board";
 import List from "@/components/custom/tasks/List";
+import MyTasks from "@/components/custom/tasks/MyTasks";
 import { useGetUser } from "@/hooks/use-user";
 
 export default function Tasks() {
@@ -76,7 +77,7 @@ export default function Tasks() {
                 Board
               </TabsTrigger>
               <TabsTrigger
-                value="my-tasks"
+                value="mytasks"
                 className="cursor-pointer data-[state=active]:bg-primary-blue data-[state=active]:text-white"
               >
                 My Tasks
@@ -108,6 +109,7 @@ export default function Tasks() {
           </div>
           <List />
           <Board />
+          <MyTasks />
         </Tabs>
       </div>
     </div>

@@ -1,25 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import axiosClient from '../api/axiosClient';
 import { AxiosError } from 'axios';
 import { useEffect, useRef } from 'react';
 import { codeService } from '../api/services/codeService';
 import { VerificationResponse } from '../types/dataInterface';
-
-// interface Verification {
-//   verification_id: string;
-//   code: string;
-//   time: Date;
-//   expiration: Date;
-//   status: 'Pending' | 'Completed' | 'Missed';
-//   snooze_count: number;
-//   last_snooze_time?: Date;
-// }
-
-// interface VerificationResponse {
-//   message: string;
-//   verification: Verification | null;
-// }
 
 export const useGetActiveVerification = () => {
   const previousVerificationId = useRef<string | null>(null);
@@ -30,6 +14,7 @@ export const useGetActiveVerification = () => {
     refetchInterval: 5000, 
     refetchOnWindowFocus: true,
     staleTime: 0,
+    gcTime: 0,
   });
 
   // Handle desktop notification when new verification appears
@@ -41,7 +26,7 @@ export const useGetActiveVerification = () => {
       verification.verification_id !== previousVerificationId.current &&
       Notification.permission === 'granted'
     ) {
-      new Notification('⚠️ Verification Required', {
+      new Notification('Verification Required', {
         body: `Please verify your presence by entering the code.\nExpires in 15 minutes.`,
         icon: '/favicon.ico',
         requireInteraction: true,
@@ -53,7 +38,6 @@ export const useGetActiveVerification = () => {
       previousVerificationId.current = null;
     }
   }, [query.data?.verification]);
-
   return query;
 };
 
@@ -67,7 +51,7 @@ export const useGenerateVerification = () => {
       toast.success('Verification code generated!');
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      const errorMessage = error.message || 'Failed to generate code.';
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to generate code.';
       toast.error(errorMessage);
       console.error('Failed to generate code:', error);
     },
@@ -95,16 +79,14 @@ export const useSnoozeVerification = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (verificationId: string) => {
-      return codeService.snoozeCode({ verificationId });
-    },
+    mutationFn: codeService.snoozeCode,
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['activeVerification'] });
       await queryClient.refetchQueries({ queryKey: ['activeVerification'] });
       toast.success(`Code snoozed (${data.snooze_count}/3 snoozes used)`);
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      const errorMessage = error.message || 'Failed to snooze';
+      const errorMessage = error.response?.data?.message || error.message || "Failed to snooze.";
       toast.error(errorMessage);
     },
   });

@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, momentLocalizer } from "react-big-calendar";
+import { Calendar, momentLocalizer, View } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import { useCalendarConnect, useCalendarSyncTasks } from "@/hooks/use-calendar";
 import { useGetUser } from "@/hooks/use-user";
 import { useGetTasks } from "@/hooks/use-task";
 import { Task } from "@/types/dataInterface";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
+
 const localizer = momentLocalizer(moment);
 
 type CalendarEvent = {
@@ -64,17 +65,23 @@ export default function MyCalendar() {
     useCalendarConnect();
   const { mutate: calendarSyncTasksMutation, isPending: isSyncingAll } =
     useCalendarSyncTasks();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentView, setCurrentView] = useState<View>("month");
 
   const tasksToEvent = useMemo(() => {
+    if (!tasks || tasks.length === 0) return [];
     // Map Tasks to Calendar Events
-    return tasks.map((task: Task) => ({
-      title: task.title,
-      description: task.description,
-      start: new Date(task.due_date),
-      end: new Date(task.due_date),
-      allDay: true,
-      status: task.status,
-    }));
+    console.log("Mapping tasks to events:", tasks);
+    return tasks.map(
+      (task: Task): CalendarEvent => ({
+        title: task.title,
+        description: task.description,
+        start: new Date(task.due_date),
+        end: new Date(task.due_date),
+        allDay: true,
+        status: task.difficulty,
+      })
+    );
   }, [tasks]);
 
   const handleConnectGoogle = () => {
@@ -83,7 +90,16 @@ export default function MyCalendar() {
   const handleSyncAllTasks = () => {
     calendarSyncTasksMutation();
   };
-  
+
+  const onNavigate = useCallback((newDate: Date) => {
+    console.log("Navigated to:", newDate);
+    setCurrentDate(newDate);
+  }, []);
+
+  const onView = useCallback((newView: View) => {
+    console.log("View changed to:", newView);
+    setCurrentView(newView);
+  }, []);
 
   return (
     <div className="p-4">
@@ -115,6 +131,7 @@ export default function MyCalendar() {
       <div className="flex">
         <div className="flex-1 mr-4">
           <Calendar
+            key={tasksToEvent.length}
             localizer={localizer}
             events={tasksToEvent}
             startAccessor="start"
@@ -122,8 +139,10 @@ export default function MyCalendar() {
             style={{ height: 500 }}
             eventPropGetter={eventStyleGetter}
             views={["month", "week", "day"]}
-            defaultView="month"
-            defaultDate={new Date(2025, 8, 1)}
+            view={currentView}
+            date={currentDate}
+            onNavigate={onNavigate}
+            onView={onView}
           />
         </div>
         <div>

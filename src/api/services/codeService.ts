@@ -12,7 +12,7 @@ export const codeService = {
   },
 
   snoozeCode: async (data: { verificationId: string }) => {
-    const response = await axiosClient.post('/code/snooze-code', { params: data });
+    const response = await axiosClient.post('/code/snooze-code', data);
     return response.data;
   },
 

@@ -93,9 +93,16 @@ export const useSyncTime = () => {
   });
 };
 
-export const useGetAttendances = (date?: string, searchInput?: string) => {
+export const useGetAllAttendances = (date?: string, searchInput?: string) => {
   return useQuery({
     queryKey: ["attendances", date, searchInput],
     queryFn: () => workService.getAllAttendances(date, searchInput),
   });
 };
+
+export const useGetAttendances = () => {
+  return useQuery({
+    queryKey: ["attendances"],
+    queryFn: workService.getAttendances,
+  });
+}

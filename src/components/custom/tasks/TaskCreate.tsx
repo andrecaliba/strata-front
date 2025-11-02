@@ -3,13 +3,15 @@
 import createTaskSchema from "@/schemas/taskcreate";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Field,
   FieldLabel,
   FieldGroup,
   FieldError,
+  FieldContent,
+  FieldLegend,
 } from "@/components/ui/field";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -34,18 +36,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { User } from "@/hooks/use-user"
+import { User } from '@/types/dataInterface';
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 
 export default function TaskCreate() {
-  const router = useRouter();
   const { data: user, isLoading: isUserLoading } = useGetUser();
   const { mutate: createTaskMutation, isPending } = useCreateTask();
   const [open, setOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
 
-  // Get available assignees (current user + subordinates for managers, or just current user for employees)
   const availableAssignees = useMemo(() => {
     if (!user) return [];
     
@@ -64,12 +63,18 @@ export default function TaskCreate() {
       taskTitle: "",
       dueDateAndTime: "",
       description: "",
-      difficulty: undefined,
+      difficulty: "Easy",
       manager: "",
       assignees: [],
+      subtasks: []
     },
     mode: "onBlur",
   });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "subtasks"
+  })
 
   const handleSubmit = form.handleSubmit((data) => {
     createTaskMutation({
@@ -78,10 +83,9 @@ export default function TaskCreate() {
       dueDate: new Date(data.dueDateAndTime),
       difficulty: data.difficulty,
       assignees: data.assignees,
+      subtasks: data.subtasks.map((item: { subtaskTitle: string }) => item.subtaskTitle)
     });
   });
-
-
 
   const toggleUser = (userId: string) => {
     const userToToggle = availableAssignees.find((u) => u?.user_id === userId);
@@ -114,6 +118,7 @@ export default function TaskCreate() {
       updated.map((u) => u.user_id)
     );
   };
+
 
   return (
     <form id="create-task" onSubmit={handleSubmit}>
@@ -373,6 +378,49 @@ export default function TaskCreate() {
               </Field>
             )}
           />
+        </div>
+        <div>
+          <FieldLegend variant="label">Subtasks</FieldLegend>
+          {
+            fields.map((field, index) => (
+              <Controller
+                key={field.id}
+                name={`subtasks.${index}.subtaskTitle`}
+                control={form.control}
+                render={({ field: controllerField, fieldState }) => (
+                  <Field orientation="horizontal" data-invalid={fieldState.invalid} className="mb-4">
+                    <FieldContent>
+                      <InputGroup>
+                        <InputGroupInput
+                          {...controllerField}
+                          id={`subtask-${index}`}
+                          aria-invalid={fieldState.invalid}
+                          placeholder="Subtask"
+                        />
+                        {/* Remove button */}
+                        <Button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="bg-red-300 text-red-600 hover:bg-red-200 cursor-pointer"
+                        >Remove</Button>
+                      </InputGroup>
+                      
+                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                    </FieldContent>
+                  </Field>
+                )}
+              />
+            ))
+          }
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => append({ subtaskTitle: "" })}
+            className="bg-primary-blue text-white cursor-pointer"
+          >
+            Add Subtask
+          </Button>
         </div>
       </FieldGroup>
       <div className="mt-4">

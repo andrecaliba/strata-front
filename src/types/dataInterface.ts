@@ -6,10 +6,18 @@ export interface User {
   first_name: string;
   last_name: string;
   role: 'Employee' | 'Manager';
+  attendances?: Attendance[];
+  tasks?: Task[];
 }
 
 export interface Assignee extends User {
   progress: number;
+}
+
+export interface Subtask {
+  subtask_id: string;
+  title: string;
+  completed: boolean;
 }
 
 export interface Task {
@@ -21,6 +29,7 @@ export interface Task {
   due_date: string;
   progress: number;
   assignees: Assignee[];
+  subtasks: Subtask[];
 }
 
 export interface Verification {

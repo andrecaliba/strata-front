@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import QuotePic from "@/assets/quote-pic.png";
 import Image from "next/image";
 import { ChartContainer, ChartConfig } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from "recharts";
 import CodeCheck from "@/components/custom/modal/CodeCheck";
 import {
   useSyncTime,
@@ -37,15 +37,21 @@ import {
   useTimeOut,
   useTimeIn,
   useEndBreak,
+  useGetAttendances,
 } from "@/hooks/use-work";
 import { useGenerateVerification } from "@/hooks/use-code";
-import { useGetUser } from "@/hooks/use-user";
-import { useGetTasks } from "@/hooks/use-task";
-import { Task } from "@/types/dataInterface";
+import { useGetAllUsers, useGetUser } from "@/hooks/use-user";
+import { useGetAllTasks, useToggleSubtask } from "@/hooks/use-task";
+import { Attendance, Subtask, Task, User } from "@/types/dataInterface";
+import { useRouter } from "next/router";
+
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { data: user, isLoading: isUserLoading } = useGetUser();
-  const { data: tasks = [], isLoading: isTasksLoading } = useGetTasks();
+  const { data: tasks = [], isLoading: isTasksLoading } = useGetAllTasks();
+  const { data: attendances = [], isLoading: isAttendancesLoading } =
+    useGetAttendances();
+  const { data: people = [], isLoading: isPeopleLoading } = useGetAllUsers();
 
   const generateVerificationMutation = useGenerateVerification();
   const [localWorkTime, setLocalWorkTime] = useState(0);
@@ -61,36 +67,92 @@ export default function Home() {
   const hasBreakTime = (workData?.attendance?.remaining_break ?? 0) > 0;
   const isCompleted = workData?.attendance?.status === "Completed";
   const hasNoAttendance = !workData?.attendance;
-
-  const chartData = [
-    { day: "Oct 1", hours: 0 },
-    { day: "Oct 2", hours: 1 },
-    { day: "Oct 3", hours: 2 },
-    { day: "Oct 4", hours: 3 },
-    { day: "Oct 5", hours: 4 },
-    { day: "Oct 6", hours: 5 },
-    { day: "Oct 7", hours: 6 },
-    { day: "Oct 8", hours: 0 },
-    { day: "Oct 9", hours: 1 },
-    { day: "Oct 10", hours: 2 },
-    { day: "Oct 11", hours: 3 },
-    { day: "Oct 12", hours: 4 },
-    { day: "Oct 13", hours: 5 },
-    { day: "Oct 14", hours: 6 },
-    { day: "Oct 15", hours: 0 },
-    { day: "Oct 16", hours: 1 },
-    { day: "Oct 17", hours: 2 },
-    { day: "Oct 18", hours: 3 },
-    { day: "Oct 19", hours: 4 },
-    { day: "Oct 20", hours: 5 },
-    { day: "Oct 21", hours: 6 },
-  ];
+  const { mutate: toggleSubtask } = useToggleSubtask();
+  // const chartData = [
+  //   { day: "Oct 1", hours: 0 },
+  //   { day: "Oct 2", hours: 1 },
+  //   { day: "Oct 3", hours: 2 },
+  //   { day: "Oct 4", hours: 3 },
+  //   { day: "Oct 5", hours: 4 },
+  //   { day: "Oct 6", hours: 5 },
+  //   { day: "Oct 7", hours: 6 },
+  //   { day: "Oct 8", hours: 0 },
+  //   { day: "Oct 9", hours: 1 },
+  //   { day: "Oct 10", hours: 2 },
+  //   { day: "Oct 11", hours: 3 },
+  //   { day: "Oct 12", hours: 4 },
+  //   { day: "Oct 13", hours: 5 },
+  //   { day: "Oct 14", hours: 6 },
+  //   { day: "Oct 15", hours: 0 },
+  //   { day: "Oct 16", hours: 1 },
+  //   { day: "Oct 17", hours: 2 },
+  //   { day: "Oct 18", hours: 3 },
+  //   { day: "Oct 19", hours: 4 },
+  //   { day: "Oct 20", hours: 5 },
+  //   { day: "Oct 21", hours: 6 },
+  // ];
   const chartConfig = {
     hours: {
       label: "Hours",
       color: "#455eee",
     },
   } satisfies ChartConfig;
+
+  // Chart Data for Attendances of Last 21 Days
+  const chartData = useMemo(() => {
+    const data = [];
+    const today = new Date();
+    console.log("Attendances:", attendances);
+    for (let i = 20; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+
+      // Use local date string for comparison
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const dateString = `${year}-${month}-${day}`;
+
+      // Find attendance for this date
+      const attendance = attendances.find((attendance: Attendance) => {
+        const attendanceDate = new Date(attendance.date)
+          .toISOString()
+          .split("T")[0];
+        return attendanceDate === dateString;
+      });
+
+      data.push({
+        day: date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        hours: attendance
+          ? Math.round((attendance.time_total / 3600) * 10) / 10
+          : 0, // Convert seconds to hours with 1 decimal
+      });
+    }
+    return data;
+  }, [attendances]);
+
+  // Get today's task (first task with due date today)
+  const todayTask = useMemo(() => {
+    if (!tasks || tasks.length === 0) return null;
+
+    const today = new Date();
+    const todayString = `${today.getFullYear()}-${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    return (
+      tasks.find((task: Task) => {
+        const taskDate = new Date(task.due_date);
+        const taskDateString = `${taskDate.getFullYear()}-${String(
+          taskDate.getMonth() + 1
+        ).padStart(2, "0")}-${String(taskDate.getDate()).padStart(2, "0")}`;
+        return taskDateString === todayString;
+      }) || null
+    );
+  }, [tasks]);
 
   // For updating local time counters
   useEffect(() => {
@@ -174,6 +236,28 @@ export default function Home() {
 
   const handleManualVerification = async () => {
     await generateVerificationMutation.mutateAsync();
+  };
+
+  const handleToggleSubtask = (subtaskId: string, currentStatus: boolean) => {
+    toggleSubtask({
+      subtaskId,
+      completed: !currentStatus, // Toggle the current status
+    });
+  };
+
+  const getStatusColor = (status: string | undefined) => {
+    switch (status) {
+      case "Active":
+        return "text-green-600";
+      case "Completed":
+        return "text-green-600";
+      case "Flagged":
+        return "text-red-600";
+      case "Taking a Break":
+        return "text-yellow-200";
+      default:
+        return "";
+    }
   };
 
   return (
@@ -315,42 +399,81 @@ export default function Home() {
           <Card>
             <CardHeader className="font-semibold">Task Today</CardHeader>
             <CardContent>
-              <div>
-                <h5 className="font-semibold">Refining Webapp UI/UX</h5>
-                <h6 className="text-xs">UI/UX Designer</h6>
-              </div>
-              <div className="mt-4 mb-2">
-                <div className="flex">
-                  <h5>Progress</h5>
-                  <h5 className="ml-auto">90%</h5>
+              {isTasksLoading ? (
+                <div className="flex items-center justify-center h-40">
+                  <p className="text-muted-foreground">Loading task...</p>
                 </div>
-              </div>
-              <Slider defaultValue={[90]} max={100} disabled />
-              <div className="flex mt-4 mb-6">
-                <Clock />
-                <span className="ml-2">Due Today</span>
-              </div>
-              <div className="flex">
-                <h5 className="font-bold">Detail Task</h5>
-                <p className="ml-auto font-light">UI/UX Designer</p>
-              </div>
-              <div className="mt-4">
-                <div className="flex items-center mb-2">
-                  <span className="rounded-sm bg-gray-200 py-2 px-4">1</span>
-                  <p className="ml-2">Overhaul the entire website of WPH</p>
+              ) : todayTask ? (
+                <>
+                  <div>
+                    <h5 className="font-semibold">{todayTask.title}</h5>
+                    <h6 className="text-xs">{todayTask.category}</h6>
+                  </div>
+                  <div className="mt-4 mb-2">
+                    <div className="flex">
+                      <h5>Progress</h5>
+                      <h5 className="ml-auto">{todayTask.progress}%</h5>
+                    </div>
+                  </div>
+                  <Slider
+                    defaultValue={[todayTask.progress]}
+                    max={100}
+                    disabled
+                  />
+                  <div className="flex mt-4 mb-6">
+                    <Clock />
+                    <span className="ml-2">Due Today</span>
+                  </div>
+                  <div className="flex">
+                    <h5 className="font-bold">Task Details</h5>
+                    <p
+                      className={`ml-auto font-light ${getDifficultyColor(
+                        todayTask.difficulty
+                      )}`}
+                    >
+                      {todayTask.difficulty}
+                    </p>
+                  </div>
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600">
+                      {todayTask.description}
+                    </p>
+                  </div>
+                  <div className="mt-4">
+                    {todayTask.subtasks.map((subtask: Subtask) => (
+                      <div
+                        key={subtask.subtask_id}
+                        className="flex items-center mt-4"
+                      >
+                        <Checkbox checked={subtask.completed}
+                        onCheckedChange={() =>
+                          handleToggleSubtask(
+                            subtask.subtask_id.toString(),
+                            subtask.completed
+                          )
+                        }
+                        className="cursor-pointer" />
+                        <p
+                          className={`text-sm ml-2 ${
+                            subtask.completed ? "line-through" : ""
+                          }`}
+                        >
+                          {subtask.title}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex">
+                    <Button className="flex-1 bg-primary-blue cursor-pointer" onClick={() => {window.location.href = `/${user?.user_id}/tasks/${todayTask.task_id}`;}}>
+                      Go to Details
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-40">
+                  <p className="text-muted-foreground">No tasks due today</p>
                 </div>
-                <div className="flex items-center">
-                  <span className="rounded-sm bg-gray-200 py-2 px-4">2</span>
-                  <p className="ml-2">
-                    Understand the basics of design decisions
-                  </p>
-                </div>
-              </div>
-              <div className="mt-2 flex">
-                <Button className="flex-1 bg-primary-blue cursor-pointer">
-                  Go to Details
-                </Button>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -360,7 +483,7 @@ export default function Home() {
               <CardHeader className="gap-0">
                 <div className="flex">
                   <h5 className="font-bold">My Tasks</h5>
-                  <button className="ml-auto text-xs text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <button className="ml-auto text-xs text-gray-400 hover:text-gray-600 cursor-pointer" onClick={() => {window.location.href = `/${user?.user_id}/tasks`;}}>
                     View all
                   </button>
                 </div>
@@ -376,7 +499,7 @@ export default function Home() {
                   </TableHeader>
                   <TableBody>
                     {tasks.map((task: Task) => (
-                      <TableRow key={task.task_id}>
+                      <TableRow key={task.task_id} onClick={() => {window.location.href = `/${user?.user_id}/tasks/${task.task_id}`;}} className="cursor-pointer hover:bg-gray-100">
                         <TableCell className="flex items-center gap-2 pr-4">
                           <div className="flex items-center gap-2 pr-4">
                             <Checkbox />
@@ -391,7 +514,11 @@ export default function Home() {
                         </TableCell>
                         <TableCell>
                           <div>
-                            <div className={`flex items-center ${getDifficultyColor(task.difficulty)}`}>
+                            <div
+                              className={`flex items-center ${getDifficultyColor(
+                                task.difficulty
+                              )}`}
+                            >
                               {task.difficulty}
                             </div>
                             <p className="text-gray-400">{task.status}</p>
@@ -400,8 +527,11 @@ export default function Home() {
                         <TableCell>
                           <div className="flex items-center -space-x-2">
                             {task.assignees.map((assignee) => (
-                              <div key={assignee.user_id} className="w-8 h-8 bg-gray-400 rounded-full text-center text-xs text-white align-middle flex items-center justify-center">
-                                  <p> {assignee.first_name.charAt(0)}</p>
+                              <div
+                                key={assignee.user_id}
+                                className="w-8 h-8 bg-gray-400 rounded-full text-center text-xs text-white align-middle flex items-center justify-center"
+                              >
+                                <p> {assignee.first_name.charAt(0)}</p>
                               </div>
                             ))}
                           </div>
@@ -416,27 +546,81 @@ export default function Home() {
               <CardHeader>
                 <div className="flex">
                   <h5 className="font-bold">People</h5>
-                  <button className="ml-auto text-xs text-gray-400 hover:text-gray-600 cursor-pointer">
+                  <button className="ml-auto text-xs text-gray-400 hover:text-gray-600 cursor-pointer" onClick={() => {window.location.href = `/${user?.user_id}/people`;}}>
                     View all
                   </button>
                 </div>
               </CardHeader>
               <CardContent className="overflow-y-auto">
-                <Card className="mb-2">
-                  <CardContent>
-                    <div className="flex items-center gap-0">
-                      <div className="w-6 h-6 rounded-full bg-gray-500"></div>
-                      <div className="ml-2">
-                        <p className="text-xs font-semibold">Daniel Padilla</p>
-                        <p className="text-xs font-light">UI/UX Designer</p>
-                      </div>
-                      <div className="text-right ml-4">
-                        <p className="text-xs font-light">Active</p>
-                        <p className="text-xs font-light">1:00:00</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {isPeopleLoading ? (
+                  <div className="flex items-center justify-center h-40">
+                    <p className="text-muted-foreground">Loading people...</p>
+                  </div>
+                ) : people.length > 0 ? (
+                  people.map((person: User) => (
+                    <Card key={person.user_id} className="mb-2">
+                      <CardContent>
+                        <div className="flex items-center gap-0">
+                          <div className="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center text-white text-xs">
+                            {person.first_name?.charAt(0)}
+                          </div>
+                          <div className="ml-2 flex-1">
+                            <p className="text-xs font-semibold">
+                              {`${person.first_name} ${person.last_name}`.trim() ||
+                                "Unknown"}
+                            </p>
+                            <p className="text-xs font-light">
+                              {person.role || "No Role"}
+                            </p>
+                          </div>
+                          <div className="text-right ml-4">
+                            {person.attendances && person.attendances.length > 0
+                              ? (() => {
+                                  const today = new Date();
+                                  const todayString = `${today.getFullYear()}-${String(
+                                    today.getMonth() + 1
+                                  ).padStart(2, "0")}-${String(
+                                    today.getDate()
+                                  ).padStart(2, "0")}`;
+
+                                  const todayAttendance =
+                                    person.attendances.find(
+                                      (att: Attendance) => {
+                                        const attDate = new Date(att.date);
+                                        const attDateString = `${attDate.getFullYear()}-${String(
+                                          attDate.getMonth() + 1
+                                        ).padStart(2, "0")}-${String(
+                                          attDate.getDate()
+                                        ).padStart(2, "0")}`;
+                                        return attDateString === todayString;
+                                      }
+                                    );
+
+                                  return (
+                                    <p
+                                      className={`text-xs font-light ${getStatusColor(
+                                        todayAttendance?.status
+                                      )}`}
+                                    >
+                                      {todayAttendance?.status || "Offline"}
+                                    </p>
+                                  );
+                                })()
+                              : (
+                                <p className="text-xs font-light">
+                                  Offline
+                                </p>
+                              )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center h-40">
+                    <p className="text-muted-foreground">No people found</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -445,18 +629,39 @@ export default function Home() {
       <Card className="mt-4">
         <CardHeader className="font-bold">My Attendance</CardHeader>
         <CardContent>
-          <ChartContainer config={chartConfig} className="w-full h-96">
-            <BarChart accessibilityLayer data={chartData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="day"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={true}
-              />
-              <Bar dataKey="hours" radius={1} />
-            </BarChart>
-          </ChartContainer>
+          {isAttendancesLoading ? (
+            <div className="flex items-center justify-center h-96">
+              <p className="text-muted-foreground">
+                Loading attendance data...
+              </p>
+            </div>
+          ) : (
+            <ChartContainer config={chartConfig} className="w-full h-96">
+              <BarChart accessibilityLayer data={chartData}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={true}
+                />
+                <Bar dataKey="hours" radius={1} fill="#455eee">
+                  <LabelList
+                    dataKey="hours"
+                    position="top"
+                    formatter={(value: number) =>
+                      value > 0 ? `${value}h` : ""
+                    }
+                    style={{
+                      fill: "#455eee",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  />
+                </Bar>
+              </BarChart>
+            </ChartContainer>
+          )}
         </CardContent>
       </Card>
     </div>

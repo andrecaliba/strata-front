@@ -14,3 +14,15 @@ export const useGetUser = () => {
     
   })
 }
+
+export const useGetAllUsers = () => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+
+  return useQuery<User[]>({
+    queryKey: ['allUsers'],
+    queryFn: userService.getAllUsers,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    retry: 1,
+    enabled: !!token,
+  })
+}

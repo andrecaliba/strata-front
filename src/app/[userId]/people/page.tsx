@@ -47,7 +47,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useGetUser } from "@/hooks/use-user";
-import { useGetAttendances, useSyncTime } from "@/hooks/use-work";
+import { useGetAllAttendances, useSyncTime } from "@/hooks/use-work";
 import { Attendance } from "@/types/dataInterface";
 import { TabsContent } from "@radix-ui/react-tabs";
 
@@ -143,7 +143,7 @@ export default function People() {
     data: attendances,
     isLoading: isAttendancesLoading,
     refetch: refetchAttendances,
-  } = useGetAttendances(formattedDate, debouncedSearchInput || undefined);
+  } = useGetAllAttendances(formattedDate, debouncedSearchInput || undefined);
 
   // Sync time and refresh attendances on mount and every 30 seconds
   useEffect(() => {
@@ -166,11 +166,15 @@ export default function People() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-300";
+        return "bg-green-300 text-green-800";
+      case "Completed":
+        return "bg-green-300 text-green-800";
       case "Flagged":
         return "bg-red-100 text-red-600";
+      case "Missed":
+        return "bg-red-100 text-red-600";
       case "Taking a Break":
-        return "bg-yellow-200";
+        return "bg-yellow-200 text-yellow-800";
       default:
         return "";
     }

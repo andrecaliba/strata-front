@@ -9,8 +9,56 @@ import AppSidebar from "@/components/custom/sidebar/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import profileImg from "@/assets/profile.jpg";
 import STRATA_FULL_LOGO from "@/assets/strataLogoHd.png";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useGetTaskById, useToggleSubtask } from "@/hooks/use-task";
+import { useParams } from "next/dist/client/components/navigation";
+import { Subtask, Task } from "@/types/dataInterface";
 
 export default function TaskDetails() {
+  const params = useParams(); // Get URL parameters
+  const taskId = params.taskId as string; // Extract taskId from URL
+
+  const {
+    data: task,
+    isLoading,
+    error,
+  } = useGetTaskById(taskId) as {
+    data: Task;
+    isLoading: boolean;
+    error: Error;
+  };
+  const { mutate: toggleSubtask } = useToggleSubtask();
+
+  const handleToggleSubtask = (subtaskId: string, currentStatus: boolean) => {
+    toggleSubtask({
+      subtaskId,
+      completed: !currentStatus, // Toggle the current status
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white py-4 px-3 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-center">Loading task details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !task) {
+    return (
+      <div className="bg-white py-4 px-3 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-center text-red-500">
+            Failed to load task details.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white py-4 px-3 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
@@ -29,25 +77,25 @@ export default function TaskDetails() {
           <div className="p-3 md:p-4 lg:p-6">
             <div className="flex flex-col gap-3 mb-8">
               <h1 className="text-[24px] font-bold leading-[28px] text-[#141522]">
-                Refining Webapp UI/UX
+                {task.title}
               </h1>
               <div className="flex flex-wrap items-center gap-3">
                 <p className="text-[14px] font-normal leading-[18px] text-[#54577A]">
-                    UI UX Design . Webapp Design
+                  {task.difficulty}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-[4px]">
                   <Users className="w-4 h-4 text-[#54577A]" strokeWidth={1.5} />
                   <span className="text-[13px] font-normal leading-4 text-[#141522]">
-                      4 Members involved
+                    {task.assignees.length} Members involved
                   </span>
                 </div>
                 <div className="flex items-center gap-[4px]">
-                    <Clock className="w-4 h-4 text-[#54577A]" strokeWidth={1.5} />
-                    <span className="text-[13px] font-normal leading-4 text-[#141522]">
-                        2 Months
-                    </span>
+                  <Clock className="w-4 h-4 text-[#54577A]" strokeWidth={1.5} />
+                  <span className="text-[13px] font-normal leading-4 text-[#141522]">
+                    Due: {new Date(task.due_date).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -57,34 +105,50 @@ export default function TaskDetails() {
                 Description
               </h2>
               <p className="text-[13px] font-normal leading-[24px] text-[#141522] max-w-[672px]">
-                Design a WPH Website from scratch for the WPH Hackathon 2025.
-                Be creative and let your imagination run wild. After designing it,
-                you can now start developing the website/webapp/mobile app when you
-                passed the 2nd stage of the group stage.
+                {task.description || "No description provided."}
               </p>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 mb-8">
               <h2 className="text-[20px] font-bold leading-6 text-[#141522]">
-                Goals of the Hackathon
+                Subtasks
               </h2>
-              <div className="flex flex-col gap-2">
-                {[
-                    "Understanding the tools in Figma",
-                    "Understand the basics of design decisions",
-                    "Overhaul the whole WPH Website",
-                    "Design a well thought-off Flowchart.",
-                ].map((goal, idx) => (
-                    <div key={idx} className="flex items-center gap-[8px]">
-                        <div className="relative w-4 h-4">
-                            <CheckCircle2 className="absolute inset-0 w-4 h-4 text-[#546FFF]" />
-                            <Check className="absolute inset-0 w-3 h-3 text-white m-auto" />
-                        </div>
-                        <span className="text-[13px] font-normal leading-[24px] text-[#141522]">
-                            {goal}
-                        </span>
+              <div>
+                {task.subtasks && task.subtasks.length > 0 ? (
+                  task.subtasks.map((subtask: Subtask) => (
+                    <div key={subtask.subtask_id} className="flex mb-2">
+                      <Checkbox
+                        checked={subtask.completed}
+                        onCheckedChange={() =>
+                          handleToggleSubtask(
+                            subtask.subtask_id.toString(),
+                            subtask.completed
+                          )
+                        }
+                        className="cursor-pointer"
+                      />
+                      <Label
+                        className={`ml-2 cursor-pointer flex-1 ${
+                          subtask.completed
+                            ? "line-through text-gray-400"
+                            : "text-[#141522]"
+                        }`}
+                        onClick={() =>
+                          handleToggleSubtask(
+                            subtask.subtask_id.toString(),
+                            subtask.completed
+                          )
+                        }
+                      >
+                        {subtask.title}
+                      </Label>
                     </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-[13px] text-[#54577A]">
+                    No subtasks available.
+                  </p>
+                )}
               </div>
             </div>
           </div>
