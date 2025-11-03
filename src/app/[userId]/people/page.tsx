@@ -1,16 +1,26 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   ArrowDownWideNarrow,
   Bell,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
@@ -18,7 +28,7 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import {
   Table,
@@ -26,9 +36,20 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useGetUser } from "@/hooks/use-user";
+import { useGetAllAttendances, useSyncTime } from "@/hooks/use-work";
+import { Attendance } from "@/types/dataInterface";
+import { TabsContent } from "@radix-ui/react-tabs";
 
 const rows = [
   {
@@ -40,7 +61,7 @@ const rows = [
     status: ["Active"],
     checkIn: "09:00",
     checkOut: "18:00",
-    workHours: "10h 2m"
+    workHours: "10h 2m",
   },
   {
     id: "0001",
@@ -51,7 +72,7 @@ const rows = [
     status: ["Absent"],
     checkIn: "00:00",
     checkOut: "00:00",
-    workHours: "0m"
+    workHours: "0m",
   },
   {
     id: "0002",
@@ -62,7 +83,7 @@ const rows = [
     status: ["Late", "Active"],
     checkIn: "10:30",
     checkOut: "18:00",
-    workHours: "8h 30m"
+    workHours: "8h 30m",
   },
   {
     id: "0003",
@@ -73,7 +94,7 @@ const rows = [
     status: ["Active", "On a Break"],
     checkIn: "09:00",
     checkOut: "18:00",
-    workHours: "10h 2m"
+    workHours: "10h 2m",
   },
   {
     id: "0004",
@@ -84,7 +105,7 @@ const rows = [
     status: ["Active"],
     checkIn: "09:00",
     checkOut: "18:00",
-    workHours: "10h 2m"
+    workHours: "10h 2m",
   },
   {
     id: "0005",
@@ -95,23 +116,109 @@ const rows = [
     status: ["AFK"],
     checkIn: "09:00",
     checkOut: "18:00",
-    workHours: "10h 2m"
+    workHours: "10h 2m",
   },
-]
+];
 
 export default function People() {
+  const { data: user, isLoading: isUserLoading } = useGetUser();
+  const { refetch: refetchSyncTime } = useSyncTime();
+
   const [date, setDate] = useState<Date>();
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [debouncedSearchInput, setDebouncedSearchInput] = useState<string>("");
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchInput(searchInput);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const formattedDate = date ? format(date, "yyyy-MM-dd") : undefined;
+
+  const {
+    data: attendances,
+    isLoading: isAttendancesLoading,
+    refetch: refetchAttendances,
+  } = useGetAllAttendances(formattedDate, debouncedSearchInput || undefined);
+
+  // Sync time and refresh attendances on mount and every 30 seconds
+  useEffect(() => {
+    const syncAndRefresh = async () => {
+      await refetchSyncTime();
+      await refetchAttendances();
+    };
+
+    // Initial sync on mount
+    syncAndRefresh();
+
+    // Set up interval for periodic syncing
+    const interval = setInterval(() => {
+      syncAndRefresh();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [refetchSyncTime, refetchAttendances]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Active":
+        return "bg-green-300 text-green-800";
+      case "Completed":
+        return "bg-green-300 text-green-800";
+      case "Flagged":
+        return "bg-red-100 text-red-600";
+      case "Missed":
+        return "bg-red-100 text-red-600";
+      case "Taking a Break":
+        return "bg-yellow-200 text-yellow-800";
+      default:
+        return "";
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return `${hrs.toString().padStart(2, "0")} Hr ${mins
+      .toString()
+      .padStart(2, "0")} Mins`;
+  };
+
+  const formatDateTime = (dateTimeString: string | undefined) => {
+    if (!dateTimeString) return "";
+    const date = new Date(dateTimeString);
+    return format(date, "MM/dd/yyyy hh:mm a");
+  };
+
+  const attendanceList = Array.isArray(attendances) ? attendances : [];
+
   return (
     <div className="p-4 w-full">
       <Card>
         <CardContent className="flex">
-          <Input type="search" className="w-80" placeholder="Search"/>
+          <Input type="search" className="w-80" placeholder="Search" />
           <div className="flex ml-auto">
-            <Bell className="w-6 h-6"/>
+            <Bell className="w-6 h-6" />
             <div className="ml-2 bg-blue-300 rounded-full w-8 h-8"></div>
             <div className="ml-2">
-              <p className="font-semibold text-xs">Justin Carlo Unggoy</p>
-              <p className="text-xs">Employee</p>
+              <p className="font-semibold text-xs">
+                {isUserLoading
+                  ? "Loading..."
+                  : user
+                  ? `${user.first_name} ${user.last_name}`.trim()
+                  : "Unknown User"}
+              </p>
+              <p className="text-xs">
+                {isUserLoading
+                  ? "Loading..."
+                  : user
+                  ? user.role
+                  : "Unknown Role"}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -119,9 +226,17 @@ export default function People() {
       <Card className="mt-4">
         <CardHeader>
           <div className="flex">
-            <CardTitle className="text-primary-dark font-semibold">People Overview</CardTitle>
+            <CardTitle className="text-primary-dark font-semibold">
+              People Overview
+            </CardTitle>
             <div className="flex ml-auto">
-              <Input type="search" placeholder="Search" className="mr-2" />
+              <Input
+                type="search"
+                placeholder="Search"
+                className="mr-2"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -141,7 +256,7 @@ export default function People() {
               <Select>
                 <SelectTrigger className="w-40">
                   <ArrowDownWideNarrow />
-                  <SelectValue placeholder="Filter"/>
+                  <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -169,29 +284,37 @@ export default function People() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map(row => (
-                <TableRow key={row.id}>
-                  <TableCell>{row.id}</TableCell>
-                  <TableCell>{row.employee}</TableCell>
-                  <TableCell className="text-gray-400">{row.role}</TableCell>
-                  <TableCell className="text-gray-400">{row.break}</TableCell>
-                  <TableCell className="text-gray-400">{row.date}</TableCell>
+              {attendanceList.map((attendance: Attendance) => (
+                <TableRow key={attendance.attendance_id}>
+                  <TableCell>
+                    {attendance.user.user_id.slice(0, 8) + "..."}
+                  </TableCell>
+                  <TableCell>
+                    {attendance.user.first_name} {attendance.user.last_name}
+                  </TableCell>
+                  <TableCell className="text-gray-400">
+                    {attendance.user.role}
+                  </TableCell>
+                  <TableCell className="text-gray-400">
+                    {formatTime(attendance.remaining_break)}
+                  </TableCell>
+                  <TableCell className="text-gray-400">
+                    {attendance.date}
+                  </TableCell>
                   <TableCell>
                     <div className="flex">
-                      {row.status.map((s, index) => {
-                        let style = "";
-                        if(s === "Active") style = "bg-green-300";
-                        else if(s === "Absent" || s === "AFK") style = "bg-red-100 text-red-600"
-                        else if(s === "Late" || s === "On a Break") style = "bg-yellow-200"
-                        return (
-                          <div key={index} className={`mr-2 px-2 py-1 rounded-sm ${style}`}>{s}</div>
-                        );
-                      })}
+                      <div
+                        className={`mr-2 px-2 py-1 rounded-sm ${getStatusColor(
+                          attendance.status
+                        )}`}
+                      >
+                        {attendance.status}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell>{row.checkIn}</TableCell>
-                  <TableCell>{row.checkOut}</TableCell>
-                  <TableCell>{row.workHours}</TableCell>
+                  <TableCell>{formatDateTime(attendance.time_in)}</TableCell>
+                  <TableCell>{formatDateTime(attendance.time_out)}</TableCell>
+                  <TableCell>{formatTime(attendance.time_total)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -208,14 +331,10 @@ export default function People() {
                   </PaginationLink>
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationLink href="#">
-                    2
-                  </PaginationLink>
+                  <PaginationLink href="#">2</PaginationLink>
                 </PaginationItem>
                 <PaginationItem>
-                  <PaginationLink href="#">
-                    3
-                  </PaginationLink>
+                  <PaginationLink href="#">3</PaginationLink>
                 </PaginationItem>
                 <PaginationNext href="#" />
               </PaginationContent>

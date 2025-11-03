@@ -10,6 +10,7 @@ export default async function Sidebar({
 }>) {
   const { userId } = await params;
 
+  
   return (
     <SidebarProvider>
       <AppSidebar />

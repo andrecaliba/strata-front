@@ -1,25 +1,38 @@
 import { TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Field, FieldLabel, FieldGroup, FieldError } from "@/components/ui/field";
+import {
+  Field,
+  FieldLabel,
+  FieldGroup,
+  FieldError,
+} from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import formSchema from "@/schemas/login";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from 'zod';
+import * as z from "zod";
+import { useSignIn } from "@/hooks/use-auth";
 
 export default function Login() {
+  const { mutate: mutateSignIn, isPending } = useSignIn();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: ""
+      password: "",
     },
-    mode: "onBlur"
-  })
+    mode: "onBlur",
+  });
+
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    mutateSignIn(data);
+  };
+
   return (
     <TabsContent value="sign-in">
-      <form id="login-form">
+      <form id="login-form" onSubmit={form.handleSubmit(onSubmit)}>
         <FieldGroup>
           <Controller
             name="email"
@@ -35,7 +48,7 @@ export default function Login() {
                   autoComplete="off"
                   className="border-primary-blue"
                 />
-                {fieldState.invalid &&(
+                {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
               </Field>
@@ -49,10 +62,12 @@ export default function Login() {
                 <div className="flex justify-between">
                   <FieldLabel htmlFor="login-password">Password</FieldLabel>
                   <Button
-                  type="button"
-                  className="hover:bg-transparent bg-transparent text-blue-400
+                    type="button"
+                    className="hover:bg-transparent bg-transparent text-blue-400
                   border-none underline hover:no-underline p-0 cursor-pointer"
-                  >Forgot Password?</Button>
+                  >
+                    Forgot Password?
+                  </Button>
                 </div>
                 <Input
                   {...field}
@@ -63,7 +78,7 @@ export default function Login() {
                   className="border-primary-blue"
                   type="password"
                 />
-                {fieldState.invalid &&(
+                {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
               </Field>
@@ -76,7 +91,9 @@ export default function Login() {
           type="submit"
           form="login-form"
           className="bg-primary-blue text-white w-full cursor-pointer"
-        >Sign In</Button>
+        >
+          Sign In
+        </Button>
       </div>
     </TabsContent>
   );

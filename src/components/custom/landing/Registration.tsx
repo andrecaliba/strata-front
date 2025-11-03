@@ -1,34 +1,70 @@
+"use client";
+
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
-import { Field, FieldLabel, FieldGroup, FieldError } from "@/components/ui/field";
+import {
+  Field,
+  FieldLabel,
+  FieldGroup,
+  FieldError,
+} from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import formSchema from "@/schemas/registration";
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from 'zod';
+import * as z from "zod";
+
+import { useSignUp } from "@/hooks/use-auth";
 
 export default function Registration() {
+  // CUSTOM HOOK VERSION
+  const { mutate: mutateSignUp, isPending } = useSignUp();
+
+  // NON-HOOK??? VERSION
+  // const router = useRouter();
+  // const { mutate: mutateSignUp, isPending } = useMutation({
+  //   mutationFn: authService.signUp,
+  //   onSuccess: () => {
+  //     router.push("/");
+  //   },
+  //   onError: (error) => {
+  //     console.error("Sign up failed:", error);
+  //   },
+  // });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       firstName: "",
       lastName: "",
-      password: ""
+      password: "",
     },
-    mode: "onBlur"
-  })
+    mode: "onBlur",
+  });
+
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    // Clear form and mutation after submission
+    mutateSignUp(data, {
+      onSuccess: () => {
+        form.reset();
+      }
+    });
+  };
+
   return (
     <TabsContent value="sign-up">
-      <form id="registration-form">
+      <form id="registration-form" onSubmit={form.handleSubmit(onSubmit)}>
         <FieldGroup>
           <Controller
             name="email"
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="registration-email">Email Address</FieldLabel>
+                <FieldLabel htmlFor="registration-email">
+                  Email Address
+                </FieldLabel>
                 <Input
                   {...field}
                   id="registration-email"
@@ -37,7 +73,7 @@ export default function Registration() {
                   autoComplete="off"
                   className="border-primary-blue"
                 />
-                {fieldState.invalid &&(
+                {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
               </Field>
@@ -57,7 +93,7 @@ export default function Registration() {
                   autoComplete="off"
                   className="border-primary-blue"
                 />
-                {fieldState.invalid &&(
+                {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
               </Field>
@@ -77,7 +113,7 @@ export default function Registration() {
                   autoComplete="off"
                   className="border-primary-blue"
                 />
-                {fieldState.invalid &&(
+                {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
               </Field>
@@ -88,7 +124,9 @@ export default function Registration() {
             control={form.control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor="registration-password">Password</FieldLabel>
+                <FieldLabel htmlFor="registration-password">
+                  Password
+                </FieldLabel>
                 <Input
                   {...field}
                   id="registration-password"
@@ -98,7 +136,7 @@ export default function Registration() {
                   className="border-primary-blue"
                   type="password"
                 />
-                {fieldState.invalid &&(
+                {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
               </Field>
@@ -111,9 +149,11 @@ export default function Registration() {
           type="submit"
           form="registration-form"
           className="bg-primary-blue text-white w-full cursor-pointer"
-        >Create Account</Button>
+          disabled={isPending}
+        >
+          {isPending ? "Creating Account..." : "Create Account"}
+        </Button>
       </div>
-      
     </TabsContent>
   );
 }

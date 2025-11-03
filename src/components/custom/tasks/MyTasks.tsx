@@ -11,13 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { useGetAllTasks } from "@/hooks/use-task";
+import { useGetTasks } from "@/hooks/use-task";
 import { Task } from "@/types/dataInterface";
 import { useRouter } from "next/navigation"; // Add this import
 
-export default function TaskList() {
-  const { data: tasks = [], isLoading } = useGetAllTasks();
-  const router = useRouter();
+export default function MyTasksList() {
+  const { data: tasks = [], isLoading } = useGetTasks();
+  const router = useRouter(); // Initialize useRouter
 
   const getDifficultyColor = (difficulty: string) =>
     ({
@@ -79,7 +79,7 @@ export default function TaskList() {
   };
 
   return (
-    <TabsContent value="list">
+    <TabsContent value="mytasks">
       <Card className="bg-white border w-full border-[#D9D9D9] rounded-lg overflow-hidden">
         <div className="px-4 sm:px-5 py-4">
           <h2 className="text-sm sm:text-base font-semibold text-[#333]">
@@ -108,6 +108,7 @@ export default function TaskList() {
           </TableHeader>
           <TableBody className="px-6 py-6 space-y-12">
             {tasks.map((task: Task) => (
+                // Navigate to task details page on row click
               <TableRow key={task.task_id} className="relative cursor-pointer" onClick={() => handleRowClick(task.task_id)}>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -159,7 +160,7 @@ export default function TaskList() {
                       </span>
                       <div className="flex items-center gap-3">
                         <Progress
-                          className={`w-[320px] h-1 $`}
+                          className={`w-[320px] h-1`}
                           value={task.progress}
                         />
                         <span className="text-[11px] text-[#BDBDBD]">

@@ -33,8 +33,15 @@ import {
   LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useParams } from "next/navigation";
+import { useSignOut } from "@/hooks/use-auth";
 
 export default function AppSidebar() {
+  const params = useParams();
+  const { mutate: signOutMutation, isPending } = useSignOut();
+  
+  const userId = params.userId as string;
+  
   return (
     <Sidebar>
       <SidebarHeader className="text-primary-dark font-semibold bg-gray-100">STRATA</SidebarHeader>
@@ -45,7 +52,7 @@ export default function AppSidebar() {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href={"#"}>
+                  <a href={`/${userId}/home`}>
                     <House />
                     <span>Home</span>
                   </a>
@@ -53,7 +60,7 @@ export default function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href={"#"}>
+                  <a href={`/${userId}/calendar`}>
                     <Calendar />
                     <span>Calendar</span>
                   </a>
@@ -78,14 +85,14 @@ export default function AppSidebar() {
                       <SidebarMenuSub>
                         <SidebarMenuSubItem>
                           <SidebarMenuButton asChild>
-                            <a href={"#"}>
+                            <a href={`/${userId}/tasks`}>
                               <span>My Tasks</span>
                             </a>
                           </SidebarMenuButton>
                         </SidebarMenuSubItem>
                         <SidebarMenuSubItem>
                           <SidebarMenuButton asChild>
-                            <a href={"#"}>
+                            <a href={`/${userId}/tasks/create`}>
                               <span>Task Creation</span>
                             </a>
                           </SidebarMenuButton>
@@ -97,7 +104,7 @@ export default function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href={"#"}>
+                  <a href={`/${userId}/people`}>
                     <UserRound />
                     <span>People</span>
                   </a>
@@ -161,7 +168,7 @@ export default function AppSidebar() {
       <SidebarFooter>
         <Button className="bg-[#fafafa] border-gray-200 border-2 text-gray-500
         hover:text-gray-500 hover:bg-gray-100" asChild>
-          <a href={"#"}>
+          <a href={"#"} onClick={() => signOutMutation()}>
             <LogOut />
             <span>Logout</span>
           </a>
