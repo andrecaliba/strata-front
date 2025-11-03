@@ -41,14 +41,14 @@ import {
 } from "@/hooks/use-work";
 import { useGenerateVerification } from "@/hooks/use-code";
 import { useGetAllUsers, useGetUser } from "@/hooks/use-user";
-import { useGetAllTasks, useToggleSubtask } from "@/hooks/use-task";
+import { useGetAllTasks, useGetTasks, useToggleSubtask } from "@/hooks/use-task";
 import { Attendance, Subtask, Task, User } from "@/types/dataInterface";
 import { useRouter } from "next/router";
 
 export default function Home() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { data: user, isLoading: isUserLoading } = useGetUser();
-  const { data: tasks = [], isLoading: isTasksLoading } = useGetAllTasks();
+  const { data: tasks = [], isLoading: isTasksLoading } = useGetTasks();
   const { data: attendances = [], isLoading: isAttendancesLoading } =
     useGetAttendances();
   const { data: people = [], isLoading: isPeopleLoading } = useGetAllUsers();
