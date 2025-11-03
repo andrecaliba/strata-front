@@ -66,6 +66,9 @@ export const useValidateCode = () => {
       codeService.validateCode({ verificationId, code: code.toUpperCase() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activeVerification'] });
+      queryClient.invalidateQueries({ queryKey: ["workStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["attendances"] });
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       toast.success('Code validated successfully!');
     },
     onError: (error: AxiosError<{ message: string }>) => {

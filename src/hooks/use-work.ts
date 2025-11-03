@@ -8,6 +8,8 @@ export const useTimeIn = () => {
     mutationFn: workService.timeIn,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["attendances"] });
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.refetchQueries({ queryKey: ["workStatus"] });
     },
     onError: (error) => {
@@ -23,6 +25,8 @@ export const useTimeOut = () => {
     mutationFn: workService.timeOut,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["attendances"] });
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.refetchQueries({ queryKey: ["workStatus"] });
     },
     onError: (error) => {
@@ -38,6 +42,8 @@ export const useStartBreak = () => {
     mutationFn: workService.startBreak,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["attendances"] });
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.refetchQueries({ queryKey: ["workStatus"] });
     },
     onError: (error) => {
@@ -53,6 +59,8 @@ export const useEndBreak = () => {
     mutationFn: workService.endBreak,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workStatus"] });
+      queryClient.invalidateQueries({ queryKey: ["attendances"] });
+      queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       queryClient.refetchQueries({ queryKey: ["workStatus"] });
     },
     onError: (error) => {
