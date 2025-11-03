@@ -13,6 +13,7 @@ import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   requestNotificationPermission,
+  useExpireVerification,
   useGetActiveVerification,
   useSnoozeVerification,
   useValidateCode,
@@ -33,6 +34,7 @@ export default function CodeCheck({
 }) {
   const { data: user, isLoading: isUserLoading } = useGetUser();
   const { data: verificationData } = useGetActiveVerification();
+  const { mutate: expireCodeMutation } = useExpireVerification();
   const validateMutation = useValidateCode();
   const { mutate: snoozeMutation, isPending } = useSnoozeVerification();
   const verification = verificationData?.verification;
@@ -65,6 +67,7 @@ export default function CodeCheck({
       setTimeRemaining(remaining);
 
       if (remaining === 0) {
+        handleExpireCode();
         clearInterval(interval);
       }
     }, 1000);
@@ -115,6 +118,16 @@ export default function CodeCheck({
       return formatDateTime(verification.time);
     }
     return formatDateTime(verification.time);
+  };
+
+  const handleExpireCode = () => {
+    if (!verification) {
+      console.error("No verification available to snooze");
+      toast.error("No verification available to snooze");
+      return;
+    }
+    console.log("Expiring verification ID:", verification.verification_id);
+    expireCodeMutation({ verificationId: verification.verification_id });
   };
 
   const canSnooze = verification && verification.snooze_count < 3;

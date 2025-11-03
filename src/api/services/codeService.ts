@@ -19,5 +19,10 @@ export const codeService = {
   getActiveCode: async () => {
     const response = await axiosClient.get('/code/get-active');
     return response.data;
-  }
+  },
+
+  expireCode: async (data: { verificationId: string }) => {
+    const response = await axiosClient.post('/code/expire-code', data);
+    return response.data;
+  }, 
 };

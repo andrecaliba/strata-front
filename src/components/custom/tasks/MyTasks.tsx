@@ -14,9 +14,11 @@ import { Progress } from "@/components/ui/progress";
 import { useGetTasks } from "@/hooks/use-task";
 import { Task } from "@/types/dataInterface";
 import { useRouter } from "next/navigation"; // Add this import
+import { useState } from "react";
 
 export default function MyTasksList() {
-  const { data: tasks = [], isLoading } = useGetTasks();
+  const [sortBy, setSortBy] = useState("Date");
+  const { data: tasks = [], isLoading } = useGetTasks(sortBy);
   const router = useRouter(); // Initialize useRouter
 
   const getDifficultyColor = (difficulty: string) =>
@@ -83,7 +85,7 @@ export default function MyTasksList() {
       <Card className="bg-white border w-full border-[#D9D9D9] rounded-lg overflow-hidden">
         <div className="px-4 sm:px-5 py-4">
           <h2 className="text-sm sm:text-base font-semibold text-[#333]">
-            All Tasks
+            My Tasks
           </h2>
         </div>
         <Table className="hidden lg:table w-full">

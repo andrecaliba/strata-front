@@ -95,6 +95,24 @@ export const useSnoozeVerification = () => {
   });
 };
 
+
+export const useExpireVerification = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: codeService.expireCode,
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['activeVerification'] });
+      await queryClient.refetchQueries({ queryKey: ['activeVerification'] });
+      toast.success(`Code expired`);
+    },
+    onError: (error: AxiosError<{ message: string }>) => {
+      const errorMessage = error.response?.data?.message || error.message || "Failed to expire code.";
+      toast.error(errorMessage);
+    },
+  });
+};
+
 // Request notification permission
 export const requestNotificationPermission = async () => {
   if ('Notification' in window && Notification.permission === 'default') {
