@@ -267,7 +267,7 @@ export default function TaskCreate() {
                       ? `You`.trim()
                       : user?.manager
                       ? `${user.manager?.first_name} ${user.manager?.last_name}`.trim()
-                      : "No Manager"
+                      : "Current Manager"
                   }
                 />
                 {fieldState.invalid && (
